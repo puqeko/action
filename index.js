@@ -48,9 +48,16 @@ async function main() {
     const pr = github.context.payload.pull_request;
     const push = !!token && !!pr;
 
+    // Get config file location from last config argument for caching
+    var configPath = '.pre-commit-config.yaml'  // Default location
+    const cIndex = Math.max(args.lastIndexOf('-c'), args.lastIndexOf('--config'));
+    if (cIndex > -1 && cIndex + 1 < args.length) {
+        configPath = args[cIndex + 1];
+    }
+
     const cachePaths = [path.join(os.homedir(), '.cache', 'pre-commit')];
     const py = getPythonVersion();
-    const cacheKey = `pre-commit-2-${hashString(py)}-${hashFile('.pre-commit-config.yaml')}`;
+    const cacheKey = `pre-commit-2-${hashString(py)}-${hashFile(configPath)}`;
     const restored = await cache.restoreCache(cachePaths, cacheKey);
     const ret = await exec.exec('pre-commit', args, {ignoreReturnCode: push});
     if (!restored) {
